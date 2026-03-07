@@ -3,7 +3,8 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-function App() {
+// Componente funcional
+function App({Component, nombre}) {
   const [count, setCount] = useState(0)
 
   return (
@@ -17,6 +18,16 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
+      <h2>Hola mi nombre es: { nombre }</h2>
+      { Component && <Component fontColor={"green"} />}
+      { Component && <Component fontColor={"blue"}/>}
+      { Component && <Component fontColor={"pink"}/>}
+      { Component && <Component fontColor={"orange"}/>}
+      { Component && <Component fontColor={"red"}/>}
+      { Component && <Component fontColor={"violet"}/>}
+      { Component && <Component fontColor={"yellow"}/>}
+      { Component && <Component fontColor={"gray"}/>}
+      { Component && <Component fontColor={"cyan"}/>}
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
@@ -24,6 +35,7 @@ function App() {
         <p>
           Edit <code>src/App.jsx</code> and save to test HMR
         </p>
+        
       </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
