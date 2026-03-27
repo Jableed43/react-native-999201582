@@ -3,7 +3,15 @@ import ScreenWrapper from "../components/ScreenWrapper"
 import { sharedStyles } from "../styles/sharedStyles"
 import { StyleSheet } from "react-native"
 
+/**
+ * Pantalla de Detalles: muestra información ampliada de un item pasado por parámetros.
+ * 
+ * @param navigation - Objeto que nos da funciones para desplazarnos, como .goBack() para volver.
+ * @param route - Objeto que contiene información sobre la ruta actual, como los parámetros recibidos.
+ */
 export default function DetailsScreen({route, navigation}: any){
+    // 'route.params' es donde guardamos los datos que pasamos desde la pantalla anterior.
+    // Usamos '|| {}' para evitar errores si no se enviaron parámetros.
     const { item } = route.params || {}
 
     return (

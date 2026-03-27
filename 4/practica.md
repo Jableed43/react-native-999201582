@@ -4,107 +4,108 @@
 
 Construir una aplicación con navegación completa que demuestre el uso de Stack Navigator, Tab Navigator y los principios de Material Design de forma práctica.
 
+---
+
+## 📘 Conceptos Fundamentales de Navegación
+
+Para que las pantallas se comuniquen entre sí, React Navigation nos provee dos objetos principales a través de las "props" de cada pantalla:
+
+### 1. `navigation` (El "Control Remoto")
+Es un objeto que contiene funciones para disparar acciones de navegación. Las más comunes son:
+- **`navigation.navigate('NombreRuta', { params })`**: Nos lleva a una pantalla específica. Si ya estamos ahí, no hace nada.
+- **`navigation.push('NombreRuta')`**: Añade una nueva pantalla a la pila, permitiendo ir a la misma pantalla varias veces (ej: de un perfil a otro perfil).
+- **`navigation.goBack()`**: Cierra la pantalla actual y vuelve a la anterior.
+- **`navigation.replace('NombreRuta')`**: Reemplaza la pantalla actual por una nueva (útil para el Login).
+
+### 2. `route` (La "Información de Viaje")
+Es un objeto que contiene información sobre la ruta actual. Lo más importante aquí es **`route.params`**.
+
+### 3. `route.params` (El "Equipaje")
+Es un objeto que contiene los datos que fueron pasados a la pantalla al navegar.
+- **En la pantalla de origen (envío):** 
+  `navigation.navigate('Details', { item: { id: 1, name: 'Producto' } })`
+- **En la pantalla de destino (recepción):**
+  `const { item } = route.params;`
+
+---
+
+## 🤔 ¿De dónde salen `navigation` y `route`? (La "Magia")
+
+Esta es una duda muy común al empezar. ¿Quién le "pasa" estas variables a mis componentes si yo no lo hago manualmente?
+
+### El Navegador es el "Padre"
+Cuando registras una pantalla en un Navegador (Stack o Tab) así:
+```tsx
+<Stack.Screen name="Home" component={HomeScreen} />
+```
+El componente principal de **React Navigation** (el `Stack.Navigator`) "envuelve" a tu componente `HomeScreen`. Al hacerlo, **inyecta automáticamente** estas props (`navigation` y `route`) dentro de él.
+
+### ¿Cómo las atrapamos? (Destructuring)
+Como son objetos que vienen en las "props" del componente, las recibimos en los parámetros de la función usando llaves `{}`:
+```tsx
+export default function HomeScreen({ navigation, route }) { 
+    // Ahora podemos usarlas aquí adentro
+}
+```
+
+### ¿Qué pasa si mi componente NO es una pantalla?
+Si creas un componente pequeño (como un Botón personalizado) y quieres que navegue, **no recibirá estas props automáticamente** porque no está registrado directamente en el Navigator. Para estos casos, React Navigation nos da "Hooks":
+- `useNavigation()`: Para obtener el objeto `navigation`.
+- `useRoute()`: Para obtener el objeto `route`.
+
+---
+
 ### Componentes/Conceptos a Aplicar
 
-- **Stack Navigator**: Navegación entre pantallas en flujo lineal
-- **Tab Navigator**: Navegación principal por pestañas
-- **React Native Paper**: Componentes Material Design
-- **Paso de parámetros**: Enviar datos entre pantallas
-- **Navegación anidada**: Combinar diferentes tipos de navegadores
+- **Stack Navigator**: Navegación entre pantallas en flujo lineal (una encima de otra).
+- **Tab Navigator**: Navegación principal por pestañas (generalmente abajo).
+- **React Native Paper**: Librería de componentes siguiendo Material Design 3.
+- **Navegación anidada**: Meter un `Stack` dentro de un `Tab` para flujos complejos.
 
-### Pasos Generales para Construir la Aplicación
+### 🛠️ Pasos Guía para el Desarrollo
 
-1. **Inicializar proyecto**: Crear proyecto Expo con `npx create-expo-app AppNavegacion`
-2. **Instalar dependencias**: Instalar todos los paquetes en un solo comando `npx expo install @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs react-native-screens react-native-gesture-handler react-native-safe-area-context react-native-reanimated react-native-paper @expo/vector-icons expo-status-bar`
-3. **Crear estructura de carpetas**: Organizar `context/`, `navigation/`, `screens/`, `styles/`, `theme/`
-4. **Crear estilos compartidos**: Implementar `sharedStyles.ts` con estilos reutilizables
-5. **Crear tema Material Design**: Configurar temas claro y oscuro en `theme/theme.ts`
-6. **Crear Context de tema**: Implementar `ThemeContext.tsx` para manejo global del tema
-7. **Configurar layout principal**: Configurar `_layout.tsx` con `SafeAreaProvider`, `ThemeProvider` y `PaperProvider`
-8. **Configurar StatusBar**: Agregar `StatusBar` dentro de `PaperProvider` con adaptación al tema
-9. **Crear Stack Navigator**: Implementar navegación tipo pila para flujos lineales
-10. **Crear Tab Navigator**: Implementar navegación por pestañas para secciones principales
-11. **Crear pantallas básicas**: Home, Perfil, Detalles, Configuración con `SafeAreaView` y `edges`
-12. **Implementar paso de parámetros**: Enviar datos entre pantallas (ej: de lista a detalle)
-13. **Integrar React Native Paper**: Agregar componentes Material Design (Button, Card, FAB)
-14. **Aplicar estilos compartidos**: Usar `cardStyle` y `sharedStyles` en todas las pantallas
-15. **Implementar navegación anidada**: Combinar Stack dentro de Tabs
-16. **Agregar gestos y animaciones**: Verificar que los gestos nativos funcionen
-17. **Aplicar estilos Material Design**: Usar elevación, espaciado en múltiplos de 8px y jerarquía visual
-18. **Verificar funcionalidad**: Probar navegación entre todas las pantallas y toggle de tema
+1. **Estructura Base**: Organiza tus carpetas para que el código sea fácil de encontrar.
+   - `app/screens`: Tus pantallas (Home, Details, etc).
+   - `app/navigation`: Donde configuras tus Navigators.
+   - `app/components`: Elementos reutilizables como el `ScreenWrapper`.
 
-### Conceptos Aplicados
+2. **Configurar el Layout Principal (`_layout.tsx`)**:
+   - Envuelve toda la app en `PaperProvider` (para estilos Material) y `SafeAreaProvider` (para evitar notch/barras del sistema).
+   - Coloca tu Navegador raíz (ej: `TabNavigator`) aquí.
 
-- **Navegación declarativa**: Configurar navegadores con componentes
-- **Stack Navigator**: Flujos lineales y navegación profunda
-- **Tab Navigator**: Navegación horizontal entre secciones
-- **Paso de parámetros**: Enviar y recibir datos entre pantallas
-- **Navegación anidada**: Combinar diferentes tipos de navegadores
-- **Material Design 3**: Aplicar principios de diseño visual
-- **React Native Paper**: Usar componentes Material Design
-- **Estilos compartidos**: Reutilización de código y consistencia visual
-- **Context API**: Manejo global del estado del tema
-- **SafeAreaView**: Respetar áreas seguras del dispositivo
-- **StatusBar**: Adaptación de la barra de estado al tema
+3. **Definir el Stack de Inicio (`HomeStack.tsx`)**:
+   - Crea un `createNativeStackNavigator`.
+   - Registra la pantalla de lista (`Home`) y la de detalle (`Details`).
+   - *Tip:* Desactiva el `headerShown` si vas a usar un componente personalizado para el título.
 
-### Resultado Final
+4. **Definir el Tab Navigator (`TabNavigator.tsx`)**:
+   - Crea el menú inferior.
+   - En lugar de poner la pantalla `Home` directamente, pon el `HomeStack`. Esto permite que cuando estés en la pestaña de inicio, puedas "entrar" a los detalles y seguir viendo el menú de abajo si así lo deseas.
 
-Una aplicación funcional que permite:
-- Navegar entre diferentes secciones usando Tabs
-- Navegar a pantallas de detalle usando Stack
-- Ver información pasada entre pantallas
-- Interactuar con componentes Material Design
-- Experimentar con gestos nativos de navegación
+5. **Implementar la Navegación con Parámetros**:
+   - En `HomeScreen`, usa un `FlatList` para mostrar datos.
+   - Al tocar un item, usa `navigation.navigate('Details', { item })`.
+   - En `DetailsScreen`, recupera los datos con `const { item } = route.params`.
 
 ---
 
-## Buenas Prácticas {#buenas-prácticas}
+## ✅ Mejores Prácticas y Consejos
 
 ### Navegación
+- **Navegación Intuitiva**: Asegúrate de que el usuario siempre pueda volver atrás (usar `navigation.goBack()` o el botón nativo).
+- **Tipado**: Si usas TypeScript, define los tipos de tus rutas para evitar errores al pasar parámetros.
+- **Nivel de Anidación**: No metas un Stack dentro de otro Stack dentro de otro Tab. Mantén la estructura simple (Máximo 2 niveles).
 
-- ✅ **Usa Stack para flujos lineales**: Formularios, detalles, procesos paso a paso
-- ✅ **Usa Tabs para secciones principales**: Home, Perfil, Búsqueda, etc.
-- ✅ **Usa Drawer para opciones secundarias**: Configuraciones, menús laterales
-- ✅ **Combina navegadores cuando sea necesario**: Stack dentro de Tabs es común
-- ✅ **Pasa parámetros de forma tipada**: Usa TypeScript para type safety
-- ❌ **Evita anidar demasiado**: Máximo 2-3 niveles de anidación
-- ❌ **No uses navegación innecesaria**: Cada pantalla debe tener un propósito claro
-
-### Material Design
-
-- ✅ **Sigue la jerarquía visual**: Usa tamaño, color y espaciado para importancia
-- ✅ **Usa componentes reconocibles**: Cards, FAB, Buttons de Material Design
-- ✅ **Aplica feedback visual**: Respuesta inmediata a interacciones
-- ✅ **Mantén consistencia**: Mismo estilo en toda la aplicación
-- ✅ **Usa elevación apropiada**: Sombras para crear profundidad
-- ✅ **Usa espaciado en múltiplos de 8px**: 8, 16, 24, 32 para consistencia
-- ✅ **Crea estilos compartidos**: Reutiliza código y mantén consistencia
-- ✅ **Configura StatusBar correctamente**: Dentro de PaperProvider y adaptado al tema
-- ✅ **Usa SafeAreaView con edges**: Excluye 'top' para evitar conflictos con StatusBar
-- ❌ **No satures la UI**: Deja espacio en blanco para respiración visual
-- ❌ **No mezcles estilos**: Mantén un sistema de diseño consistente
-- ❌ **No olvides el Context**: Usa Context API para tema global, no prop drilling
+### Material Design (UI/UX)
+- **Espaciado**: Usa múltiplos de 8px (8, 16, 24, 32) para márgenes y paddings. Da una sensación de orden.
+- **Feedback**: Si el usuario toca un botón o card, debe haber un efecto visual (ripple/sombra).
+- **Consistencia**: Usa `sharedStyles.ts` para que todas las pantallas se vean parecidas.
 
 ---
 
-## Resumen y Recursos {#resumen-y-recursos}
+## 📚 Recursos para profundizar
 
-### Conceptos Clave Aprendidos
-
-1. **React Navigation**: Sistema de navegación estándar para React Native
-2. **Stack Navigator**: Para flujos lineales y navegación profunda
-3. **Tab Navigator**: Para navegación horizontal entre secciones principales
-4. **Drawer Navigator**: Para menús laterales y opciones secundarias
-5. **Material Design 3**: Guía de diseño para interfaces coherentes
-6. **React Native Paper**: Librería de componentes Material Design para React Native
-7. **Estilos Compartidos**: Reutilización de código y mantenimiento de consistencia visual
-8. **Context API**: Manejo global del estado (tema claro/oscuro)
-9. **SafeAreaView**: Respeto de áreas seguras del dispositivo
-10. **StatusBar**: Configuración adaptativa según el tema de la aplicación
-
-### Recursos Oficiales
-
-- **React Navigation:** https://reactnavigation.org/docs/getting-started
-- **React Native Paper:** https://callstack.github.io/react-native-paper/
-- **Material Design 3:** https://m3.material.io/
-- **Expo Router (alternativa):** https://docs.expo.dev/guides/routing/
+- **Docs Oficiales de React Navigation:** [Navigate Method](https://reactnavigation.org/docs/navigating)
+- **Guía de Parámetros:** [Passing Parameters to Routes](https://reactnavigation.org/docs/params)
+- **React Native Paper Components:** [Button](https://callstack.github.io/react-native-paper/docs/guides/components)
+- **Material Design 3 Guidelines:** [M3 Layout](https://m3.material.io/foundations/layout/understanding-layout)
