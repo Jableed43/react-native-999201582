@@ -89,6 +89,24 @@
       "username": "fijo",
       "email": "pinonFijo@gmail.com",
       "id": 13
+    },
+    {
+      "name": "Alumno nuevo",
+      "userName": "clase_5",
+      "email": "alumno_nuevo@gmail.com",
+      "id": 14
+    },
+    {
+      "name": "Alumno nuevo",
+      "userName": "clase_5",
+      "email": "alumno_nuevo@gmail.com",
+      "id": 15
+    },
+    {
+      "name": "Alumno nuevo",
+      "userName": "clase_5",
+      "email": "alumno_nuevo@gmail.com",
+      "id": 16
     }
   ]
 }
