@@ -59,6 +59,12 @@ export default function Index() {
           onChangeText={setSearch}
         />
       </View>
+      <TouchableOpacity 
+        style={styles.labButton} 
+        onPress={() => router.push("/ref-example")}
+      >
+        <Text style={styles.labButtonText}>🧪 Ver Laboratorio useRef (Clase 06)</Text>
+      </TouchableOpacity>
 
       {loading && users.length === 0 ? (
         <View style={styles.centered}>
@@ -139,5 +145,20 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#fff',
+  },
+  labButton: {
+    backgroundColor: '#ebf5ff',
+    margin: 10,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#007bff',
+    alignItems: 'center',
+    borderStyle: 'dashed',
+  },
+  labButtonText: {
+    color: '#007bff',
+    fontWeight: '600',
+    fontSize: 15,
   }
 });
