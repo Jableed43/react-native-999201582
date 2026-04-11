@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import { fetchUsers, User } from "../../services/api";
 
 export const useGetUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -17,11 +18,13 @@ export const useGetUsers = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadUsers();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUsers();
+    }, [loadUsers])
+  );
 
   return { users, loading, error, refetch: loadUsers };
 };

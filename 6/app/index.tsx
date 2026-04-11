@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   Text, 
   View, 
@@ -6,29 +6,66 @@ import {
   ActivityIndicator, 
   StyleSheet, 
   TextInput,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGetUsers } from "../hooks/api/useGetUsers";
+import { useDeleteUser } from "../hooks/api/useDeleteUser";
 import { UserCard } from "../components/UserCard";
+import { User } from "../services/api";
 
 export default function Index() {
   const router = useRouter();
   const { users, loading, error, refetch } = useGetUsers();
+  const { removeUser, loading: deleting } = useDeleteUser();
   const [search, setSearch] = useState("");
 
-  // Sin useMemo: Se filtra en cada renderizado
-  const getFilteredUsers = () => {
-    if (!search.trim()) return users;
-    return users.filter(user => 
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
+  const getFilteredUsers = useMemo(() => {
+    if(!search.trim()){
+      return users
+    }
+    return users.filter(user =>
+      user.name.toLowerCase().includes(search.toLowerCase()) || 
       user.email.toLowerCase().includes(search.toLowerCase())
-    );
-  };
+    )
+  }, [users, search])
 
   const handleGoToCreate = () => {
     router.push("/create-user");
+  };
+
+  const handleDelete = async (id: number) => {
+    Alert.alert(
+      "Confirmar",
+      "¿Estás seguro de que deseas eliminar este usuario?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Eliminar", 
+          style: "destructive",
+          onPress: async () => {
+             const success = await removeUser(id);
+             if (success) {
+               refetch(); // Refetch explícito después de borrar
+             }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleEdit = (user: User) => {
+    router.push({
+      pathname: "/edit-user",
+      params: { 
+        id: user.id.toString(),
+        name: user.name,
+        username: user.username,
+        email: user.email
+      }
+    });
   };
 
   if (error) {
@@ -59,6 +96,15 @@ export default function Index() {
           onChangeText={setSearch}
         />
       </View>
+
+      {/* Indicador de Refetch Explícito */}
+      {loading && users.length > 0 && (
+        <View style={styles.refetchIndicator}>
+          <ActivityIndicator size="small" color="#007bff" />
+          <Text style={styles.refetchText}>Actualizando lista...</Text>
+        </View>
+      )}
+
       <TouchableOpacity 
         style={styles.labButton} 
         onPress={() => router.push("/ref-example")}
@@ -72,9 +118,15 @@ export default function Index() {
         </View>
       ) : (
         <FlatList
-          data={getFilteredUsers()}
+          data={getFilteredUsers}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <UserCard user={item} />}
+          renderItem={({ item }) => (
+            <UserCard 
+              user={item} 
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          )}
           refreshing={loading}
           onRefresh={refetch}
           ListEmptyComponent={
@@ -83,6 +135,12 @@ export default function Index() {
             </View>
           }
         />
+      )}
+      
+      {deleting && (
+        <View style={styles.overlay}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
       )}
     </SafeAreaView>
   );
@@ -160,5 +218,23 @@ const styles = StyleSheet.create({
     color: '#007bff',
     fontWeight: '600',
     fontSize: 15,
+  },
+  refetchIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    backgroundColor: '#e7f3ff',
+  },
+  refetchText: {
+    marginLeft: 10,
+    color: '#007bff',
+    fontWeight: '600',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 });

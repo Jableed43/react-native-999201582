@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { createUser, CreateUserData } from "../../services/api";
 
 export const usePostUser = () => {
@@ -6,7 +6,7 @@ export const usePostUser = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const saveUser = async (userData: CreateUserData) => {
+  const saveUser = useCallback(async (userData: CreateUserData) => {
     try {
       setLoading(true);
       setError(null);
@@ -20,7 +20,7 @@ export const usePostUser = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { saveUser, loading, error, success };
 };
