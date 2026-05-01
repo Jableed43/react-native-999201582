@@ -22,7 +22,6 @@ import {
   query
 } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
-import { stringify } from "node:querystring";
 
 // Tipo para las notas
 interface Nota {
@@ -119,12 +118,31 @@ function TodoListScreen({ nombreUsuario }: { nombreUsuario: string }) {
   // FIRESTORE: Leer notas en tiempo real
   // ============================================
   useEffect(() => {
+    console.log({loading})
     // TODO: Paso 4 - Conectar listener de Firestore (onSnapshot)
     // El listener debe actualizar el estado 'notas'
-    
-    return () => {
-      // No olvidar el cleanup!
-    };
+    setLoading(true)
+    // queremos ver dentro de la coleccion de notas
+    const q = query(collection(db, "notas"))
+
+    // onSnapShot crea un canal de comunicacion abierto
+    // porque si hay cambios la funcion se dispara sola y actualiza los datos en pantalla
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log("Datos recibidos de Firestore:", snapshot.docs.length, "notas");
+      const notasData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Nota))
+      setNotas(notasData)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error en el listener de Firestore:", error);
+      setLoading(false);
+    })
+    return () => unsubscribe()
+    // cuando el usuario sale de la pantalla se corta esta conexion
+    // liberamos memoria
   }, []);
 
   // ============================================
@@ -134,14 +152,43 @@ function TodoListScreen({ nombreUsuario }: { nombreUsuario: string }) {
     if (!nuevaDescripcion.trim() || guardando) return;
     
     // TODO: Paso 5 - addDoc en Firestore
+    setGuardando(true)
+    try {
+      await addDoc(collection(db, "notas"), {
+        nombre: nombreUsuario,
+        descripcion: nuevaDescripcion.trim(),
+        estado: false,
+        createdAt: new Date().getTime()
+      })
+      setNuevaDescripcion("")
+    } catch (error) {
+      console.error("Error al agregar nota:", error);
+      alert("Error al conectar con la base de datos");
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const toggleNota = async (id: string) => {
-    // TODO: Paso 6 - updateDoc en Firestore (cambiar estado)
+    try {
+      const notaRef = doc(db, "notas", id);
+      const nota = notas.find(n => n.id === id);
+      if (nota) {
+        await updateDoc(notaRef, {
+          estado: !nota.estado
+        });
+      }
+    } catch (error) {
+      console.error("Error al actualizar nota:", error);
+    }
   };
 
   const eliminarNota = async (id: string) => {
-    // TODO: Paso 7 - deleteDoc en Firestore
+    try {
+      await deleteDoc(doc(db, "notas", id));
+    } catch (error) {
+      console.error("Error al eliminar nota:", error);
+    }
   };
 
   // Calcular notas pendientes
