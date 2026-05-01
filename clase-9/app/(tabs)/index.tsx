@@ -22,6 +22,7 @@ import {
   query
 } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
+import { stringify } from "node:querystring";
 
 // Tipo para las notas
 interface Nota {
@@ -43,8 +44,9 @@ function LoginScreen({ onLogin }: { onLogin: (nombre: string) => void }) {
       setLoading(true);
       try {
         // TODO: Paso 1 - Guardar nombre en AsyncStorage
-        // await AsyncStorage.setItem('@app:nombre', nombre.trim());
-        // onLogin(nombre.trim());
+        // guardamos en asyncStorage nombre y le pasamos el dato
+        await AsyncStorage.setItem("@app:nombre", nombre.trim())
+        onLogin(nombre.trim())
       } catch (error) {
         console.error('Error al guardar nombre:', error);
       } finally {
@@ -99,6 +101,10 @@ function TodoListScreen({ nombreUsuario }: { nombreUsuario: string }) {
   useEffect(() => {
     const cargarDarkMode = async () => {
       // TODO: Paso 2 - Cargar preferencia de dark mode
+     const darkModeGuardado = await AsyncStorage.getItem("@app:darkMode")
+      if(darkModeGuardado !== null){
+        setDarkMode(JSON.parse(darkModeGuardado))
+      }
     };
     cargarDarkMode();
   }, []);
@@ -106,6 +112,7 @@ function TodoListScreen({ nombreUsuario }: { nombreUsuario: string }) {
   const toggleDarkMode = async (valor: boolean) => {
     setDarkMode(valor);
     // TODO: Paso 3 - Guardar preferencia de dark mode
+    await AsyncStorage.setItem("@app:darkMode", JSON.stringify(valor))
   };
 
   // ============================================
@@ -222,8 +229,10 @@ export default function App() {
     const cargarNombre = async () => {
       try {
         // TODO: Paso 0 - Recuperar nombre de AsyncStorage al iniciar
-        // const nombre = await AsyncStorage.getItem('@app:nombre');
-        // if (nombre) setNombreUsuario(nombre);
+        const nombre = await AsyncStorage.getItem("@app:nombre")
+        if(nombre !== null){
+          setNombreUsuario(nombre)
+        }
       } catch (error) {
         console.error('Error al cargar nombre:', error);
       } finally {
