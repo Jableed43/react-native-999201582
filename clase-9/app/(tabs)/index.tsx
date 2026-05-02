@@ -1,289 +1,33 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Switch,
-  ActivityIndicator,
-} from "react-native";
-
+import { ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  collection, 
-  addDoc, 
-  onSnapshot, 
-  updateDoc, 
-  deleteDoc, 
-  doc,
-  query
-} from 'firebase/firestore';
-import { db } from '@/config/firebaseConfig';
 
-// Tipo para las notas
-interface Nota {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  estado: boolean;
-}
+import { LoginScreen } from "@/components/LoginScreen";
+import { TodoListScreen } from "@/components/TodoListScreen";
 
-// ============================================
-// PANTALLA DE LOGIN (Skeleton)
-// ============================================
-function LoginScreen({ onLogin }: { onLogin: (nombre: string) => void }) {
-  const [nombre, setNombre] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async () => {
-    if (nombre.trim()) {
-      setLoading(true);
-      try {
-        // TODO: Paso 1 - Guardar nombre en AsyncStorage
-        // guardamos en asyncStorage nombre y le pasamos el dato
-        await AsyncStorage.setItem("@app:nombre", nombre.trim())
-        onLogin(nombre.trim())
-      } catch (error) {
-        console.error('Error al guardar nombre:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  return (
-    <SafeAreaView style={styles.loginContainer}>
-      <View style={styles.loginContent}>
-        <Text style={styles.loginTitle}>Bienvenido</Text>
-        <Text style={styles.loginSubtitle}>Ingresa tu nombre para comenzar</Text>
-        
-        <TextInput
-          style={styles.loginInput}
-          placeholder="Tu nombre"
-          placeholderTextColor="#999"
-          value={nombre}
-          onChangeText={setNombre}
-          onSubmitEditing={handleLogin}
-          autoCapitalize="words"
-        />
-        
-        <TouchableOpacity
-          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-          onPress={handleLogin}
-          disabled={loading || !nombre.trim()}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.loginButtonText}>Entrar</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-// ============================================
-// PANTALLA PRINCIPAL DE TAREAS (Skeleton)
-// ============================================
-function TodoListScreen({ nombreUsuario }: { nombreUsuario: string }) {
-  const [notas, setNotas] = useState<Nota[]>([]);
-  const [nuevaDescripcion, setNuevaDescripcion] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
-  const [loading, setLoading] = useState(false); // Cambiado a false para el starter
-  const [guardando, setGuardando] = useState(false);
-
-  // Cargar preferencia de dark mode desde AsyncStorage
-  useEffect(() => {
-    const cargarDarkMode = async () => {
-      // TODO: Paso 2 - Cargar preferencia de dark mode
-     const darkModeGuardado = await AsyncStorage.getItem("@app:darkMode")
-      if(darkModeGuardado !== null){
-        setDarkMode(JSON.parse(darkModeGuardado))
-      }
-    };
-    cargarDarkMode();
-  }, []);
-
-  const toggleDarkMode = async (valor: boolean) => {
-    setDarkMode(valor);
-    // TODO: Paso 3 - Guardar preferencia de dark mode
-    await AsyncStorage.setItem("@app:darkMode", JSON.stringify(valor))
-  };
-
-  // ============================================
-  // FIRESTORE: Leer notas en tiempo real
-  // ============================================
-  useEffect(() => {
-    console.log({loading})
-    // TODO: Paso 4 - Conectar listener de Firestore (onSnapshot)
-    // El listener debe actualizar el estado 'notas'
-    setLoading(true)
-    // queremos ver dentro de la coleccion de notas
-    const q = query(collection(db, "notas"))
-
-    // onSnapShot crea un canal de comunicacion abierto
-    // porque si hay cambios la funcion se dispara sola y actualiza los datos en pantalla
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      console.log("Datos recibidos de Firestore:", snapshot.docs.length, "notas");
-      const notasData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Nota))
-      setNotas(notasData)
-      setLoading(false)
-    }, (error) => {
-      console.error("Error en el listener de Firestore:", error);
-      setLoading(false);
-    })
-    return () => unsubscribe()
-    // cuando el usuario sale de la pantalla se corta esta conexion
-    // liberamos memoria
-  }, []);
-
-  // ============================================
-  // FIRESTORE: CRUD Operaciones
-  // ============================================
-  const agregarNota = async () => {
-    if (!nuevaDescripcion.trim() || guardando) return;
-    
-    // TODO: Paso 5 - addDoc en Firestore
-    setGuardando(true)
-    try {
-      await addDoc(collection(db, "notas"), {
-        nombre: nombreUsuario,
-        descripcion: nuevaDescripcion.trim(),
-        estado: false,
-        createdAt: new Date().getTime()
-      })
-      setNuevaDescripcion("")
-    } catch (error) {
-      console.error("Error al agregar nota:", error);
-      alert("Error al conectar con la base de datos");
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const toggleNota = async (id: string) => {
-    try {
-      const notaRef = doc(db, "notas", id);
-      const nota = notas.find(n => n.id === id);
-      if (nota) {
-        await updateDoc(notaRef, {
-          estado: !nota.estado
-        });
-      }
-    } catch (error) {
-      console.error("Error al actualizar nota:", error);
-    }
-  };
-
-  const eliminarNota = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, "notas", id));
-    } catch (error) {
-      console.error("Error al eliminar nota:", error);
-    }
-  };
-
-  // Calcular notas pendientes
-  const notasPendientes = notas.filter((n) => !n.estado).length;
-
-  const renderItem = ({ item }: { item: Nota }) => (
-    <View style={[styles.itemContainer, darkMode && styles.itemContainerDark]}>
-      <TouchableOpacity style={styles.item} onPress={() => toggleNota(item.id)}>
-        <View style={[styles.checkbox, darkMode && styles.checkboxDark, item.estado && styles.checkboxCompletado]}>
-          {item.estado && <Text style={styles.checkmark}>✓</Text>}
-        </View>
-        <View style={styles.textoContainer}>
-          <Text style={[styles.textoDescripcion, darkMode && styles.textoDescripcionDark, item.estado && styles.textoDescripcionCompletado]}>
-            {item.descripcion}
-          </Text>
-          {item.nombre && <Text style={[styles.textoNombre, darkMode && styles.textoNombreDark]}>Por: {item.nombre}</Text>}
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.botonEliminar} onPress={() => eliminarNota(item.id)}>
-        <Text style={styles.textoEliminar}>🗑️</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={[styles.container, darkMode && styles.containerDark]}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={[styles.titulo, darkMode && styles.tituloDark]}>Hola, {nombreUsuario}!</Text>
-            <Text style={[styles.contador, darkMode && styles.contadorDark]}>
-              {`${notasPendientes} ${notasPendientes === 1 ? "nota pendiente" : "notas pendientes"}`}
-            </Text>
-          </View>
-          <View style={styles.switchContainer}>
-            <Text style={[styles.switchLabel, darkMode && styles.switchLabelDark]}>Modo Oscuro</Text>
-            <Switch value={darkMode} onValueChange={toggleDarkMode} />
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[styles.input, darkMode && styles.inputDark]}
-          placeholder="Escribe una nueva nota..."
-          placeholderTextColor={darkMode ? '#999' : '#999'}
-          value={nuevaDescripcion}
-          onChangeText={setNuevaDescripcion}
-          onSubmitEditing={agregarNota}
-          editable={!guardando}
-        />
-        <TouchableOpacity style={[styles.botonAgregar, guardando && styles.botonAgregarDisabled]} onPress={agregarNota} disabled={guardando}>
-          {guardando ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.textoBotonAgregar}>Agregar</Text>}
-        </TouchableOpacity>
-      </View>
-
-      {loading ? (
-        <View style={styles.vacio}><ActivityIndicator size="large" color="#007AFF" /></View>
-      ) : (
-        <FlatList
-          data={notas}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.lista}
-          ListEmptyComponent={
-            <View style={styles.vacio}>
-              <Text style={[styles.textoVacioIcono, darkMode && styles.textoVacioIconoDark]}>📝</Text>
-              <Text style={[styles.textoVacio, darkMode && styles.textoVacioDark]}>No hay notas todavía</Text>
-            </View>
-          }
-        />
-      )}
-    </SafeAreaView>
-  );
-}
-
-// ============================================
-// COMPONENTE PRINCIPAL
-// ============================================
+/**
+ * Componente Raíz de la aplicación.
+ * Se encarga de la lógica de "auth" básica: decide si mostrar el Login o la lista de Notas.
+ */
 export default function App() {
-  const [nombreUsuario, setNombreUsuario] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [nombreUsuario, setNombreUsuario] = useState<string | null>(null); // null significa no identificado
+  const [loading, setLoading] = useState(true); // Controla la pantalla de carga inicial
 
+  /**
+   * Al iniciar la app, verificamos si ya existe un nombre guardado en el dispositivo.
+   */
   useEffect(() => {
     const cargarNombre = async () => {
       try {
-        // TODO: Paso 0 - Recuperar nombre de AsyncStorage al iniciar
-        const nombre = await AsyncStorage.getItem("@app:nombre")
-        if(nombre !== null){
-          setNombreUsuario(nombre)
+        const nombre = await AsyncStorage.getItem("@app:nombre");
+        if (nombre !== null) {
+          setNombreUsuario(nombre); // Si existe, saltamos directamente a la TodoList
         }
       } catch (error) {
         console.error('Error al cargar nombre:', error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Terminamos la carga inicial
       }
     };
     cargarNombre();
@@ -291,7 +35,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loginContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
       </SafeAreaView>
     );
@@ -305,50 +49,11 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  loginContainer: { flex: 1, backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  loginContent: { width: '100%', maxWidth: 400 },
-  loginTitle: { fontSize: 32, fontWeight: 'bold', color: '#333', marginBottom: 10, textAlign: 'center' },
-  loginSubtitle: { fontSize: 16, color: '#666', marginBottom: 30, textAlign: 'center' },
-  loginInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 15, fontSize: 16, backgroundColor: 'white', marginBottom: 20 },
-  loginButton: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, alignItems: 'center' },
-  loginButtonDisabled: { opacity: 0.6 },
-  loginButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  container: { flex: 1, backgroundColor: 'white' },
-  containerDark: { backgroundColor: '#121212' },
-  header: { padding: 20 },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  titulo: { fontSize: 24, fontWeight: 'bold', color: 'black', marginBottom: 5 },
-  tituloDark: { color: 'white' },
-  switchContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  switchLabel: { fontSize: 14, color: 'black' },
-  switchLabelDark: { color: 'white' },
-  contador: { fontSize: 16, color: 'black' },
-  contadorDark: { color: 'white' },
-  inputContainer: { flexDirection: 'row', padding: 15 },
-  input: { flex: 1, borderWidth: 1, borderColor: 'gray', padding: 10, marginRight: 10, backgroundColor: 'white', color: 'black', borderRadius: 8 },
-  inputDark: { backgroundColor: '#1e1e1e', borderColor: '#444', color: 'white' },
-  botonAgregar: { backgroundColor: '#007AFF', padding: 10, borderRadius: 8, justifyContent: 'center', minWidth: 80 },
-  botonAgregarDisabled: { opacity: 0.6 },
-  textoBotonAgregar: { color: 'white', fontWeight: '600', textAlign: 'center' },
-  lista: { flex: 1 },
-  itemContainer: { flexDirection: 'row', padding: 15, borderBottomWidth: 1, borderBottomColor: 'gray', backgroundColor: 'white' },
-  itemContainerDark: { backgroundColor: '#1e1e1e', borderBottomColor: '#444' },
-  item: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  textoContainer: { flex: 1 },
-  textoDescripcion: { fontSize: 16, flex: 1, color: 'black' },
-  textoDescripcionDark: { color: 'white' },
-  textoDescripcionCompletado: { textDecorationLine: 'line-through', opacity: 0.6 },
-  textoNombre: { fontSize: 12, color: '#666', marginTop: 4 },
-  textoNombreDark: { color: '#999' },
-  checkbox: { width: 24, height: 24, borderWidth: 2, borderColor: 'gray', marginRight: 10, borderRadius: 4, justifyContent: 'center', alignItems: 'center' },
-  checkboxDark: { borderColor: '#666' },
-  checkboxCompletado: { backgroundColor: 'green', borderColor: 'green' },
-  checkmark: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  botonEliminar: { padding: 10, justifyContent: 'center' },
-  textoEliminar: { fontSize: 20 },
-  vacio: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  textoVacioIcono: { fontSize: 64, marginBottom: 20 },
-  textoVacioIconoDark: { opacity: 0.8 },
-  textoVacio: { fontSize: 18, fontWeight: '600', color: 'black', marginTop: 10, textAlign: 'center' },
-  textoVacioDark: { color: 'white' },
+  loadingContainer: { 
+    flex: 1, 
+    backgroundColor: '#f5f5f5', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
 });
+

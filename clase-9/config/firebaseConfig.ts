@@ -1,7 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// Configuración usando variables de entorno (.env)
+/**
+ * Configuración central de Firebase para la aplicación.
+ * 
+ * NOTA: Los valores se obtienen de variables de entorno (.env).
+ * Esto es una buena práctica de seguridad para no exponer credenciales en el código fuente.
+ */
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -11,8 +16,11 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Inicializar Firebase
+// Inicializamos la aplicación de Firebase con la configuración anterior
 const app = initializeApp(firebaseConfig);
 
-// Exportar Firestore
+/**
+ * Exportamos la instancia de Firestore (la base de datos NoSQL).
+ * Esta instancia será utilizada en los componentes para realizar operaciones CRUD.
+ */
 export const db = getFirestore(app);

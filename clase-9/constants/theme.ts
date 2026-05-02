@@ -8,19 +8,23 @@ import { Platform } from 'react-native';
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
+/**
+ * Diccionario de colores de la aplicación.
+ * Organizado por temas (light/dark) para soportar el cambio dinámico de apariencia.
+ */
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
+    text: '#11181C',         // Color principal del texto
+    background: '#fff',      // Fondo de pantalla principal
+    tint: tintColorLight,    // Color de acento (botones, enlaces)
+    icon: '#687076',         // Color de iconos secundarios
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
+    text: '#ECEDEE',         // Texto para fondo oscuro
+    background: '#151718',   // Fondo oscuro
+    tint: tintColorDark,     // Color de acento para modo oscuro
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
