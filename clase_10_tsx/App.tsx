@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
+import MainNavigator from './src/navigation/MainNavigator';
 
 /**
  * STARTER KIT - CLASE 10
@@ -12,11 +13,8 @@ import { StatusBar } from 'expo-status-bar';
 export default function App() {
   return (
     <NavigationContainer>
-      <StatusBar style="auto" />
-      <View style={styles.container}>
-        <Text style={styles.text}>¡Listo para empezar la Clase 10!</Text>
-        <Text style={styles.subtext}>Edita App.tsx para comenzar a integrar MainNavigator</Text>
-      </View>
+      <StatusBar style="light" />
+      <MainNavigator />
     </NavigationContainer>
   );
 }

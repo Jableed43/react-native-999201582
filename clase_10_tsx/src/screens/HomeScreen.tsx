@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import AnimatedScreen from '../components/AnimatedScreen';
 
 export default function HomeScreen() {
   return (
+    <AnimatedScreen>
     <View style={styles.container}>
       <Text style={styles.title}>Home Screen</Text>
       <Text>Aquí codearemos la lista animada...</Text>
     </View>
+    </AnimatedScreen>
   );
 }
 
